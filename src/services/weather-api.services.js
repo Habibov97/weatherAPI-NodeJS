@@ -23,6 +23,19 @@ api.interceptors.request.use(
   },
 );
 
+const checkCityName = async (cityName) => {
+  let result = await api.get('search.json', {
+    params: { q: cityName },
+  });
+  if (!result?.data) return false;
+
+  let findCity = result.data.find((city) => city.name === cityName && city.country === 'Azerbaijan');
+
+  if (!findCity) return false;
+
+  return true;
+};
+
 // More beautiful way
 // api.interceptors.request.use((config) => {
 //   config.params = {
@@ -39,7 +52,7 @@ const fetchCurrentWeather = async (cityName) => {
     // api.get('current.json', {
     //   params: { q: cityName },
     // });
-    return result.data.current;
+    return result.data?.current;
   } catch (err) {
     console.error('request failed with error', err);
     return false;
@@ -48,9 +61,15 @@ const fetchCurrentWeather = async (cityName) => {
 
 const fetchWeather = async (cityName, day = 1) => {
   try {
-    let result = await api.get(`forecast.json?q=${cityName}&days=${day}`);
-    return result.data.forecast.forecastday;
-  } catch (error) {
+    let result = await api.get(`forecast.json`, {
+      params: {
+        q: cityName,
+        days: day,
+      },
+    });
+
+    return result.data?.forecast?.forecastday;
+  } catch (err) {
     console.error('request failed with error', err);
     return false;
   }
@@ -58,4 +77,6 @@ const fetchWeather = async (cityName, day = 1) => {
 
 module.exports = {
   fetchCurrentWeather,
+  fetchWeather,
+  checkCityName,
 };

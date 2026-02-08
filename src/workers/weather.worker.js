@@ -1,24 +1,46 @@
-const cron = require('cron');
-const { fetchCurrentWeather } = require('../services/weather-api.services');
-const cityWeatherModel = require('../models/city-weather.model');
-const cronjob = cron.CronJob;
+const { CronJob } = require('cron');
+const cityService = require('../services/city.service');
+const weatherService = require('../services/weather.service');
 
-const job = new cronjob('* * * * *', async () => {
-  const cities = await cityWeatherModel.find({}, 'city');
-
-  for (let item of cities) {
-    let result = await fetchCurrentWeather(item.city);
-    if (!result) continue;
-    await cityWeatherModel.findOneAndUpdate(
-      { city: item.city },
-      {
-        temperature: result.temp_c,
-        date: new Date(),
-      },
-      { upsert: true, new: true },
-    );
+const weatherWorkerHandler = async () => {
+  // const cities = await cityWeatherModel.find({}, 'city');
+  const cities = await cityService.getCities();
+  for (let city of cities) {
+    await weatherService.createCityWeather(city.name);
   }
   console.log('worker executed');
-});
+};
 
+// const weatherWorkerHandler = async () => {
+//   for (let city of cities) {
+//     let result = await fetchWeather(city, config.forecastDays);
+//     if (!result) continue;
+//     for (let dayResult of result) {
+//       let date = dayResult.date;
+//       let currentData = await cityWeatherModel.findOne({
+//         date,
+//         city,
+//       });
+//       if (currentData) {
+//         currentData.temperature = dayResult.day.avgtemp_c;
+//         await currentData.save();
+
+//         console.log(`${city} for ${date} is updated `);
+//       } else {
+//         let cityWeather = await cityWeatherModel.create({
+//           city,
+//           temperature: dayResult.day.avgtemp_c,
+//           date,
+//         });
+
+//         await cityWeather.save();
+//       }
+//     }
+//   }
+//   console.log('worker executed');
+// };
+
+// weatherWorkerHandler();
+
+const job = new CronJob('* * * * *', weatherWorkerHandler);
 job.start();

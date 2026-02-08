@@ -5,7 +5,6 @@ const cityWeatherSchema = new mongoose.Schema(
     city: {
       type: String,
       required: true,
-      unique: true,
     },
     temperature: {
       type: Number,

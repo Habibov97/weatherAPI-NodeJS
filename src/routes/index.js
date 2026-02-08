@@ -1,7 +1,9 @@
 const express = require('express');
-const cityWeatherRouter = require('./city-weather.route');
+const cityWeatherRouter = require('./weather.route');
+const cityRouter = require('./city.router');
 const router = express.Router();
 
-router.use('/', cityWeatherRouter);
+router.use('/city-weather', cityWeatherRouter);
+router.use('/city', cityRouter);
 
 module.exports = router;

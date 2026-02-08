@@ -11,4 +11,5 @@ module.exports = {
     url: process.env.WEATHER_API_URL,
     apikey: process.env.WEATHER_API_KEY,
   },
+  forecastDays: 7,
 };
