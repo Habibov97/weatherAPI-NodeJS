@@ -6,6 +6,7 @@ const weatherWorkerHandler = async () => {
   // const cities = await cityWeatherModel.find({}, 'city');
   const cities = await cityService.getCities();
   for (let city of cities) {
+    await weatherService.deleteOutdatedWeather(city.name);
     await weatherService.createCityWeather(city.name);
   }
   console.log('worker executed');
@@ -40,7 +41,7 @@ const weatherWorkerHandler = async () => {
 //   console.log('worker executed');
 // };
 
-// weatherWorkerHandler();
+weatherWorkerHandler();
 
-const job = new CronJob('* * * * *', weatherWorkerHandler);
+const job = new CronJob('0 0 * * *', weatherWorkerHandler);
 job.start();

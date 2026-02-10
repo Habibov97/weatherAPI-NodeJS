@@ -17,6 +17,8 @@ const getCity = async (id) => {
   }
 };
 
+const getCityByName = (name) => cityModel.findOne({ name: new RegExp(name, 'i') });
+
 const createCity = async (name) => {
   let isNameValid = await checkCityName(name);
   if (!isNameValid) throw new Error('City name is not found or valid!');
@@ -48,6 +50,7 @@ const deleteCity = async (id) => {
 const cityService = {
   getCities,
   getCity,
+  getCityByName,
   createCity,
   deleteCity,
 };

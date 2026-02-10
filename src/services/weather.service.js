@@ -1,22 +1,32 @@
-const { format } = require('date-fns');
+const { format, differenceInDays } = require('date-fns');
 const { fetchWeather } = require('./weather-api.services');
 const cityWeatherModel = require('../models/weather.model');
 const config = require('../config');
-const cityModel = require('../models/city.model');
 
-const getWeatherList = async () => {
-  let date = format(new Date(), 'yyyy-MM-dd');
-  let list = await cityWeatherModel.find();
+const getWeatherList = async (query = {}, { ignoredDate = false } = {}) => {
+  let { date, city } = query;
+  if (!date && !ignoredDate) date = format(new Date(), 'yyyy-MM-dd');
+
+  let where = {};
+  if (date) {
+    where.date = date;
+  }
+
+  if (city)
+    where.city = {
+      $regex: new RegExp(city, 'i'),
+    };
+  let list = await cityWeatherModel.find(where);
   return list;
 };
 
-const getCityWeather = async (id) => {
-  let result = await cityModel.findById(id);
-  if (!result) return false;
-  let weatherResult = await cityWeatherModel.find({ city: result.name });
-  if (!weatherResult) return false;
+const getCityWeatherByCityName = async (city) => {
+  const caseSensetiveCityName = {
+    $regex: new RegExp(city, 'i'),
+  };
+  let weatherResultByCityName = await cityWeatherModel.find({ city: caseSensetiveCityName });
 
-  return weatherResult;
+  return weatherResultByCityName;
 };
 
 const createCityWeather = async (cityName) => {
@@ -34,10 +44,21 @@ const createCityWeather = async (cityName) => {
   }
 };
 
+const deleteOutdatedWeather = async (city) => {
+  let citiesWeather = await getWeatherList({ city }, { ignoredDate: true });
+  for (let cityWeather of citiesWeather) {
+    const cityDate = new Date(cityWeather.date);
+    if (differenceInDays(new Date(), cityDate) > 0) {
+      await cityWeatherModel.deleteOne({ _id: cityWeather._id });
+    }
+  }
+};
+
 const weatherService = {
   createCityWeather,
   getWeatherList,
-  getCityWeather,
+  getCityWeatherByCityName,
+  deleteOutdatedWeather,
 };
 
 module.exports = weatherService;
